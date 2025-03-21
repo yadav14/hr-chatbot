@@ -1,5 +1,7 @@
-name: HR Chatbot Bot
-
+name: Zuki [ Simran's personal assistant Bot]
+permissions:
+  issues: write
+  contents: read
 on:
   issues:
     types: [opened]
