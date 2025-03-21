@@ -1,38 +1,34 @@
-name: Auto Reply to HR Questions
+name: HR Chatbot Bot
 
 on:
   issues:
     types: [opened]
 
 jobs:
-  reply:
+  chatbot-response:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Respond to HR Question
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const issueTitle = context.payload.issue.title.toLowerCase();
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.x'
+            let response = "Thanks for your question! I'll get back to you soon.";
 
-    - name: Install dependencies (none needed here)
-      run: echo "No dependencies needed"
+            if (issueTitle.includes("notice period")) {
+              response = "Hi! My notice period is 30 days 😊";
+            } else if (issueTitle.includes("experience")) {
+              response = "I have 5+ years of experience in DevOps, Kubernetes, and Cloud Automation.";
+            } else if (issueTitle.includes("salary expectation")) {
+              response = "My expected CTC is negotiable based on role and responsibility.";
+            } else if (issueTitle.includes("location preference")) {
+              response = "I'm open to remote and hybrid work opportunities.";
+            }
 
-    - name: Run Bot Script
-      id: get_answer
-      run: |
-        QUESTION="${{ github.event.issue.title }}"
-        echo "Question: $QUESTION"
-        ANSWER=$(python3 bot.py "$QUESTION")
-        echo "ANSWER=$ANSWER" >> $GITHUB_OUTPUT
-
-    - name: Post Answer Comment
-      uses: peter-evans/create-or-update-comment@v3
-      with:
-        issue-number: ${{ github.event.issue.number }}
-        body: |
-          🤖 **Auto-Reply from HR Chatbot:**
-          ${{ steps.get_answer.outputs.ANSWER }}
-
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: response
+            });
