@@ -1,0 +1,38 @@
+name: Auto Reply to HR Questions
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  reply:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies (none needed here)
+      run: echo "No dependencies needed"
+
+    - name: Run Bot Script
+      id: get_answer
+      run: |
+        QUESTION="${{ github.event.issue.title }}"
+        echo "Question: $QUESTION"
+        ANSWER=$(python3 bot.py "$QUESTION")
+        echo "ANSWER=$ANSWER" >> $GITHUB_OUTPUT
+
+    - name: Post Answer Comment
+      uses: peter-evans/create-or-update-comment@v3
+      with:
+        issue-number: ${{ github.event.issue.number }}
+        body: |
+          🤖 **Auto-Reply from HR Chatbot:**
+          ${{ steps.get_answer.outputs.ANSWER }}
+
