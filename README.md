@@ -32,3 +32,14 @@ default via 70.1.1.1 dev ens2f2
 70.1.0.0/23 dev ens2f2 proto kernel scope link src 70.1.1.82 metric 101
 192.168.56.0/24 dev vboxnet0 proto kernel scope link src 192.168.56.1
 192.168.122.0/24 dev virbr0 proto kernel scope link src 192.168.122.1 linkdown
+
+
+Jan 08 12:57:22 ocp-bootstrap.lab1.srib-lab-ocp.lan conmon[377244]: conmon e098972d52b4ebe46323 <nwarn>: Failed to open cgroups file: /sys/fs/cgroup/machine.slice/libpod-e098972d52b4ebe46323ac9ba7921a17a15219adee005cc503ab2bcb3235b725.scope/container/memory.events
+Jan 08 12:57:22 ocp-bootstrap.lab1.srib-lab-ocp.lan stoic_cori[377244]: quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:3cbba55ecd5bb44889c6c4434325c4fc3a10f8c6951b15c8b12f319ba7bc6a04
+Jan 08 12:57:22 ocp-bootstrap.lab1.srib-lab-ocp.lan podman[377235]: 2026-01-08 12:57:22.687971453 +0000 UTC m=+0.086896086 container died e098972d52b4ebe46323ac9ba7921a17a15219adee005cc503ab2bcb3235b725 (image=bastion.srib-lab-ocp.lan:8443/ocp4/openshift4@sha256:0bf2e8c1edf16de717c330b94d85f6d463c7208956b0a545cbb3fcf715e14c38, name=stoic_cori, io.openshift.release.base-image-digest=sha256:65aa22f13b104ef68e4eb2dde6300e0f0fe376b682fc7c163da01699d8165f8e, io.openshift.release=4.18.23)
+Jan 08 12:57:22 ocp-bootstrap.lab1.srib-lab-ocp.lan podman[377235]: 2026-01-08 12:57:22.615901331 +0000 UTC m=+0.014825965 image pull 34761f53050815e11feb742ee7c11ebc429c39da0cc160dd7a334843bfa6c8c4 bastion.srib-lab-ocp.lan:8443/ocp4/openshift4@sha256:0bf2e8c1edf16de717c330b94d85f6d463c7208956b0a545cbb3fcf715e14c38
+Jan 08 12:57:22 ocp-bootstrap.lab1.srib-lab-ocp.lan podman[377235]: 2026-01-08 12:57:22.739719329 +0000 UTC m=+0.138643960 container remove e098972d52b4ebe46323ac9ba7921a17a15219adee005cc503ab2bcb3235b725 (image=bastion.srib-lab-ocp.lan:8443/ocp4/openshift4@sha256:0bf2e8c1edf16de717c330b94d85f6d463c7208956b0a545cbb3fcf715e14c38, name=stoic_cori, io.openshift.release=4.18.23, io.openshift.release.base-image-digest=sha256:65aa22f13b104ef68e4eb2dde6300e0f0fe376b682fc7c163da01699d8165f8e)
+Jan 08 12:57:22 ocp-bootstrap.lab1.srib-lab-ocp.lan bootkube.sh[377262]: /usr/local/bin/bootkube.sh: line 85: oc: command not found
+Jan 08 12:57:22 ocp-bootstrap.lab1.srib-lab-ocp.lan systemd[1]: bootkube.service: Main process exited, code=exited, status=127/n/a
+Jan 08 12:57:22 ocp-bootstrap.lab1.srib-lab-ocp.lan systemd[1]: bootkube.service: Failed with result 'exit-code'.
+Jan 08 12:57:22 ocp-bootstrap.lab1.srib-lab-ocp.lan systemd[1]: bootkube.service: Consumed 1.371s CPU time.
