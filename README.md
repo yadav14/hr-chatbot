@@ -43,3 +43,21 @@ Jan 08 12:57:22 ocp-bootstrap.lab1.srib-lab-ocp.lan bootkube.sh[377262]: /usr/lo
 Jan 08 12:57:22 ocp-bootstrap.lab1.srib-lab-ocp.lan systemd[1]: bootkube.service: Main process exited, code=exited, status=127/n/a
 Jan 08 12:57:22 ocp-bootstrap.lab1.srib-lab-ocp.lan systemd[1]: bootkube.service: Failed with result 'exit-code'.
 Jan 08 12:57:22 ocp-bootstrap.lab1.srib-lab-ocp.lan systemd[1]: bootkube.service: Consumed 1.371s CPU time.
+
+
+
+
+
+
+
+
+
+
+
+
+
+Jan 08 13:04:14 ocp-bootstrap.lab1.srib-lab-ocp.lan etcdctl[394406]: {"level":"warn","ts":"2026-01-08T13:04:14.473490Z","logger":"client","caller":"v3@v3.5.18/retry_interceptor.go:63","msg":"retrying of unary invoker failed","target":"etcd-endpoints://0xc0002705a0/localhost:2379","attempt":0,"error":"rpc error: code = DeadlineExceeded desc = latest balancer error: last connection error: connection error: desc = \"transport: Error while dialing: dial tcp [::1]:2379: connect: connection refused\""}
+Jan 08 13:04:14 ocp-bootstrap.lab1.srib-lab-ocp.lan etcdctl[394406]: https://localhost:2379 is unhealthy: failed to commit proposal: context deadline exceeded
+Jan 08 13:04:14 ocp-bootstrap.lab1.srib-lab-ocp.lan etcdctl[394406]: Error: unhealthy cluster
+Jan 08 13:04:14 ocp-bootstrap.lab1.srib-lab-ocp.lan bootkube.sh[394397]: {"level":"warn","ts":"2026-01-08T13:04:14.473490Z","logger":"client","caller":"v3@v3.5.18/retry_interceptor.go:63","msg":"retrying of unary invoker failed","target":"etcd-endpoints://0xc0002705a0/localhost:2379","attempt":0,"error":"rpc error: code = DeadlineExceeded desc = latest balancer error: last connection error: connection error: desc = \"transport: Error while dialing: dial tcp [::1]:2379: connect: connection refused\""}
+
