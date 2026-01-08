@@ -20,3 +20,15 @@ nameserver 127.0.0.1
 nameserver 8.8.8.8
 nameserver 1.1.1.1
 nameserver ::1
+
+
+not working
+[root@bastion mirror-reg]# ip route
+default via 70.1.1.1 dev ens2f2
+10.10.4.0/23 dev ens2f1 proto kernel scope link src 10.10.4.163 metric 100
+10.88.0.0/16 dev cni-podman0 proto kernel scope link src 10.88.0.1
+10.88.0.0/16 dev cni-podman0 proto kernel scope link src 10.88.0.1 metric 425
+65.1.1.111 via 70.1.1.1 dev ens2f2 proto static metric 100
+70.1.0.0/23 dev ens2f2 proto kernel scope link src 70.1.1.82 metric 101
+192.168.56.0/24 dev vboxnet0 proto kernel scope link src 192.168.56.1
+192.168.122.0/24 dev virbr0 proto kernel scope link src 192.168.122.1 linkdown
