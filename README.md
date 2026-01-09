@@ -61,3 +61,15 @@ Jan 08 13:04:14 ocp-bootstrap.lab1.srib-lab-ocp.lan etcdctl[394406]: https://loc
 Jan 08 13:04:14 ocp-bootstrap.lab1.srib-lab-ocp.lan etcdctl[394406]: Error: unhealthy cluster
 Jan 08 13:04:14 ocp-bootstrap.lab1.srib-lab-ocp.lan bootkube.sh[394397]: {"level":"warn","ts":"2026-01-08T13:04:14.473490Z","logger":"client","caller":"v3@v3.5.18/retry_interceptor.go:63","msg":"retrying of unary invoker failed","target":"etcd-endpoints://0xc0002705a0/localhost:2379","attempt":0,"error":"rpc error: code = DeadlineExceeded desc = latest balancer error: last connection error: connection error: desc = \"transport: Error while dialing: dial tcp [::1]:2379: connect: connection refused\""}
 
+
+--------------------
+
+mage=bastion.srib-lab-ocp.lan:8443/ocp4/openshift4@sha256:0bf2e8c1edf16de717c330b94d85f6d463c7208956b0a545cbb3fcf715e14c38, name=jovial_agnesi, io.openshift.release=4.18.23, io.openshift.release.base-image-digest=sha256:65aa22f13b104ef68e4eb2dde6300e0f0fe376b682fc7c163da01699d8165f8e)
+Jan 09 12:51:42 ocp-bootstrap.lab4.srib-lab-ocp.lan bootkube.sh[22102]: /usr/local/bin/bootkube.sh: line 85: oc: command not found
+Jan 09 12:51:42 ocp-bootstrap.lab4.srib-lab-ocp.lan systemd[1]: bootkube.service: Main process exited, code=exited, status=127/n/a
+Jan 09 12:51:42 ocp-bootstrap.lab4.srib-lab-ocp.lan systemd[1]: bootkube.service: Failed with result 'exit-code'.
+Jan 09 12:51:42 ocp-bootstrap.lab4.srib-lab-ocp.lan systemd[1]: bootkube.service: Consumed 1.205s CPU time.
+Jan 09 12:51:47 ocp-bootstrap.lab4.srib-lab-ocp.lan systemd[1]: bootkube.service: Scheduled restart job, restart counter is at 39.
+Jan 09 12:51:47 ocp-bootstrap.lab4.srib-lab-ocp.lan systemd[1]: Stopped Bootstrap a Kubernetes cluster.
+Jan 09 12:51:47 ocp-bootstrap.lab4.srib-lab-ocp.lan systemd[1]: bootkube.service: Consumed 1.205s CPU time.
+Jan 09 12:51:50 ocp-bootstrap.lab4.srib-lab-ocp.lan systemd[1]: Started Bootstrap a Kubernetes cluster.
