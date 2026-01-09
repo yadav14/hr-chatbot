@@ -1,4 +1,11 @@
 # Zuki [Simran's Personal assistant]
+
+grep -R "zone \"srib-lab-ocp.lan\"" -n /etc/named.conf /etc/named.rfc1912.zones /etc/named/*.conf
+grep -R "zone \"lab4.srib-lab-ocp.lan\"" -n /etc/named.conf /etc/named.rfc1912.zones /etc/named/*.conf
+
+
+
+
 Simran's personal assistant Zuki here to help you to answer all the questions of Recruiter on behalf of simran
 
 oc: /lib64/libc.so.6: version `GLIBC_2.33' not found (required by oc)
@@ -114,4 +121,5 @@ Jan 09 17:59:55 ocp-bootstrap.lab4.srib-lab-ocp.lan bootkube.sh[22923]: "cluster
 Jan 09 17:59:55 ocp-bootstrap.lab4.srib-lab-ocp.lan bootkube.sh[22923]: "cluster-scheduler-02-config.yml": failed to get schedulers.v1.config.openshift.io/cluster -n : Get "https://localhost:6443/apis/config.openshift.io/v1/schedulers/cluster": dial tcp [::1]:6443: connect: connection refused
 Jan 09 17:59:55 ocp-bootstrap.lab4.srib-lab-ocp.lan bootkube.sh[22923]: "image-content-source-policy.yaml": failed to get imagecontentsourcepolicies.v1alpha1.operator.openshift.io/image-policy -n : Get "https://localhost:6443/apis/operator.openshift.io/v1alpha1/imagecontentsourcepolicies/image-policy": dial tcp [::1]:6443: connect: connection refused
 Jan 09 17:59:55 ocp-bootstrap.lab4.srib-lab-ocp.lan bootkube.sh[22923]: "machine-config-99-sctp-module.yaml": failed to get machineconfigs.v1.machineconfiguration.openshift.io/99-load-sctp-module-master -n : Get "https://localhost:6443/apis/machineconfiguration.openshift.io/v1/machineconfigs/99-load-sctp-module-master": dial tcp [::1]:6443: connect: connection refused
+
 
