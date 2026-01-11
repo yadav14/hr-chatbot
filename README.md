@@ -1,3 +1,16 @@
+
+
+sudo tee /usr/local/bin/nmstatectl >/dev/null <<'EOF'
+#!/bin/bash
+exec podman run --rm quay.io/nmstate/nmstatectl:latest nmstatectl "$@"
+EOF
+sudo chmod +x /usr/local/bin/nmstatectl
+nmstatectl --version
+
+
+
+
+
 # Zuki [Simran's Personal assistant]
 
 grep -R "zone \"srib-lab-ocp.lan\"" -n /etc/named.conf /etc/named.rfc1912.zones /etc/named/*.conf
