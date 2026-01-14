@@ -1,3 +1,38 @@
+112
+---
+- name: Fetch iLO product name, serial number and iLO IP using Redfish
+  hosts: ilo
+  connection: local
+  gather_facts: no
+
+  vars:
+    redfish_user: "admin"
+    redfish_password: "password"
+    redfish_base: "https://{{ ansible_host }}/redfish/v1"
+    system_id: "1"
+
+  tasks:
+    - name: Get System details from Redfish
+      uri:
+        url: "{{ redfish_base }}/Systems/{{ system_id }}"
+        method: GET
+        user: "{{ redfish_user }}"
+        password: "{{ redfish_password }}"
+        force_basic_auth: yes
+        validate_certs: no
+        return_content: yes
+        headers:
+          Accept: "application/json"
+      register: sysinfo
+
+    - name: Print Product Name, Serial Number, iLO IP
+      debug:
+        msg:
+          - "iLO IP Address  : {{ ansible_host }}"
+          -
+
+
+
 ---
 - name: Fetch MAC address for specific NIC interface
   hosts: bmc
