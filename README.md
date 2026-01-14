@@ -1,3 +1,104 @@
+
+
+[ilo]
+ilo1 ansible_host=192.168.10.101
+ilo2 ansible_host=192.168.10.102
+
+
+---
+- name: Check iLO / Redfish health
+  hosts: ilo
+  connection: local
+  gather_facts: no
+
+  vars:
+    redfish_user: admin
+    redfish_password: password
+    system_id: 1
+
+  tasks:
+
+  - name: Check Redfish API reachable
+    uri:
+      url: "https://{{ ansible_host }}/redfish/v1"
+      method: GET
+      user: "{{ redfish_user }}"
+      password: "{{ redfish_password }}"
+      force_basic_auth: yes
+      validate_certs: no
+      status_code: 200
+    register: redfish_root
+
+  - name: Get system health and power state
+    uri:
+      url: "https://{{ ansible_host }}/redfish/v1/Systems/{{ system_id }}"
+      method: GET
+      user: "{{ redfish_user }}"
+      password: "{{ redfish_password }}"
+      force_basic_auth: yes
+      validate_certs: no
+      return_content: yes
+    register: system_status
+
+  - name: Print iLO health summary
+    debug:
+      msg:
+        - "iLO IP: {{ ansible_host }}"
+        - "PowerState: {{ system_status.json.PowerState }}"
+        - "Health: {{ system_status.json.Status.Health }}"
+        - "State: {{ system_status.json.Status.State }}"
+
+
+    ---
+- name: Check iLO / Redfish health
+  hosts: ilo
+  connection: local
+  gather_facts: no
+
+  vars:
+    redfish_user: admin
+    redfish_password: password
+    system_id: 1
+
+  tasks:
+
+  - name: Check Redfish API reachable
+    uri:
+      url: "https://{{ ansible_host }}/redfish/v1"
+      method: GET
+      user: "{{ redfish_user }}"
+      password: "{{ redfish_password }}"
+      force_basic_auth: yes
+      validate_certs: no
+      status_code: 200
+    register: redfish_root
+
+  - name: Get system health and power state
+    uri:
+      url: "https://{{ ansible_host }}/redfish/v1/Systems/{{ system_id }}"
+      method: GET
+      user: "{{ redfish_user }}"
+      password: "{{ redfish_password }}"
+      force_basic_auth: yes
+      validate_certs: no
+      return_content: yes
+    register: system_status
+
+  - name: Print iLO health summary
+    debug:
+      msg:
+        - "iLO IP: {{ ansible_host }}"
+        - "PowerState: {{ system_status.json.PowerState }}"
+        - "Health: {{ system_status.json.Status.Health }}"
+        - "State: {{ system_status.json.Status.State }}"
+
+
+
+
+
+
+
+
 ‐------
 #!/usr/bin/env python3
 import requests
