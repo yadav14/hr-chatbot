@@ -1,4 +1,40 @@
+‐------
+#!/usr/bin/env python3
+import requests
+import urllib3
 
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+BMC_IP   = "192.168.10.101"
+USER     = "admin"
+PASSWORD = "password"
+
+BASE = f"https://{BMC_IP}/redfish/v1"
+
+def get_json(url):
+    r = requests.get(url, auth=(USER, PASSWORD), verify=False, timeout=15)
+    r.raise_for_status()
+    return r.json()
+
+def main():
+    root = get_json(BASE)
+    print("RedfishVersion:", root.get("RedfishVersion"))
+
+    systems_url = BASE + root["Systems"]["@odata.id"]
+    systems = get_json(systems_url)
+
+    # usually first system is the server
+    system_id_url = systems["Members"][0]["@odata.id"]
+    system = get_json(BASE + system_id_url)
+
+    print("Name      :", system.get("Name"))
+    print("Model     :", system.get("Model"))
+    print("PowerState:", system.get("PowerState"))
+    print("HostName  :", system.get("HostName"))
+
+if __name__ == "__main__":
+    main()
+-------
 
 sudo tee /usr/local/bin/nmstatectl >/dev/null <<'EOF'
 #!/bin/bash
