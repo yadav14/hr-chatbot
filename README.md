@@ -1,4 +1,47 @@
+---
+- name: Fetch MAC address for specific NIC interface
+  hosts: bmc
+  connection: local
+  gather_facts: no
+  vars_files:
+    - vars.yml
 
+  tasks:
+
+  - name: Get EthernetInterfaces collection
+    uri:
+      url: "https://{{ ansible_host }}/redfish/v1/Systems/{{ redfish_system_id }}/EthernetInterfaces"
+      method: GET
+      user: "{{ redfish_user }}"
+      password: "{{ redfish_password }}"
+      force_basic_auth: yes
+      validate_certs: no
+    register: eth_ifaces
+
+  - name: Fetch details for each EthernetInterface
+    uri:
+      url: "https://{{ ansible_host }}{{ item['@odata.id'] }}"
+      method: GET
+      user: "{{ redfish_user }}"
+      password: "{{ redfish_password }}"
+      force_basic_auth: yes
+      validate_certs: no
+    loop: "{{ eth_ifaces.json.Members }}"
+    register: iface_details
+
+  - name: Print MAC address for target interface
+    debug:
+      msg: >
+        Interface {{ target_interface }} MAC address is
+        {{ item.json.MACAddress }}
+    when:
+      - item.json.Name is defined
+      - target_interface in item.json.Name
+    loop: "{{ iface_details.results }}"
+
+
+
+------
 
 [ilo]
 ilo1 ansible_host=192.168.10.101
