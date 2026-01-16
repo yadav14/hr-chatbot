@@ -1,3 +1,21 @@
+- name: ColdBoot via Redfish (hard power cycle)
+  ansible.builtin.uri:
+    url: "https://{{ ilo_host }}/redfish/v1/Systems/{{ redfish_system_id }}/Actions/ComputerSystem.Reset"
+    method: POST
+    user: "{{ ilo_user }}"
+    password: "{{ ilo_pass }}"
+    force_basic_auth: true
+    validate_certs: false
+    headers:
+      Content-Type: "application/json"
+      Accept: "application/json"
+    body_format: json
+    body:
+      ResetType: "ColdBoot"
+    status_code: [200, 202, 204]
+    return_content: true
+  register: coldboot_result
+_________
 112
 ---
 - name: Fetch iLO product name, serial number and iLO IP using Redfish
