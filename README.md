@@ -1,4 +1,7 @@
-
+- name: Generate core user password hash
+  ansible.builtin.set_fact:
+    core_password_hash: "{{ core_password_plain | password_hash('sha512') }}"
+  no_log: true
 oc_tarball: "openshift-client-linux.tar.gz"
 installer_tarball: "openshift-install-linux.tar.gz"
 
