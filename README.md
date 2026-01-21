@@ -1,371 +1,77 @@
-- name: ColdBoot via Redfish (hard power cycle)
-  ansible.builtin.uri:
-    url: "https://{{ ilo_host }}/redfish/v1/Systems/{{ redfish_system_id }}/Actions/ComputerSystem.Reset"
-    method: POST
-    user: "{{ ilo_user }}"
-    password: "{{ ilo_pass }}"
-    force_basic_auth: true
-    validate_certs: false
-    headers:
-      Content-Type: "application/json"
-      Accept: "application/json"
-    body_format: json
-    body:
-      ResetType: "ColdBoot"
-    status_code: [200, 202, 204]
-    return_content: true
-  register: coldboot_result
-_________
-112
----
-- name: Fetch iLO product name, serial number and iLO IP using Redfish
-  hosts: ilo
-  connection: local
-  gather_facts: no
 
-  vars:
-    redfish_user: "admin"
-    redfish_password: "password"
-    redfish_base: "https://{{ ansible_host }}/redfish/v1"
-    system_id: "1"
+oc_tarball: "openshift-client-linux.tar.gz"
+installer_tarball: "openshift-install-linux.tar.gz"
 
-  tasks:
-    - name: Get System details from Redfish
-      uri:
-        url: "{{ redfish_base }}/Systems/{{ system_id }}"
-        method: GET
-        user: "{{ redfish_user }}"
-        password: "{{ redfish_password }}"
-        force_basic_auth: yes
-        validate_certs: no
-        return_content: yes
-        headers:
-          Accept: "application/json"
-      register: sysinfo
+oc_url: "{{ openshift_base_url }}/{{ openshift_version }}/{{ oc_tarball }}"
+installer_url: "{{ openshift_base_url }}/{{ openshift_version }}/{{ installer_tarball }}"
 
-    - name: Print Product Name, Serial Number, iLO IP
-      debug:
-        msg:
-          - "iLO IP Address  : {{ ansible_host }}"
-          -
+cluster_dir: "{{ work_dir }}/{{ cluster_name }}"
 
 
 
 ---
-- name: Fetch MAC address for specific NIC interface
-  hosts: bmc
-  connection: local
-  gather_facts: no
-  vars_files:
-    - vars.yml
-
-  tasks:
-
-  - name: Get EthernetInterfaces collection
-    uri:
-      url: "https://{{ ansible_host }}/redfish/v1/Systems/{{ redfish_system_id }}/EthernetInterfaces"
-      method: GET
-      user: "{{ redfish_user }}"
-      password: "{{ redfish_password }}"
-      force_basic_auth: yes
-      validate_certs: no
-    register: eth_ifaces
-
-  - name: Fetch details for each EthernetInterface
-    uri:
-      url: "https://{{ ansible_host }}{{ item['@odata.id'] }}"
-      method: GET
-      user: "{{ redfish_user }}"
-      password: "{{ redfish_password }}"
-      force_basic_auth: yes
-      validate_certs: no
-    loop: "{{ eth_ifaces.json.Members }}"
-    register: iface_details
-
-  - name: Print MAC address for target interface
-    debug:
-      msg: >
-        Interface {{ target_interface }} MAC address is
-        {{ item.json.MACAddress }}
-    when:
-      - item.json.Name is defined
-      - target_interface in item.json.Name
-    loop: "{{ iface_details.results }}"
-
-
-
-------
-
-[ilo]
-ilo1 ansible_host=192.168.10.101
-ilo2 ansible_host=192.168.10.102
-
-
----
-- name: Check iLO / Redfish health
-  hosts: ilo
-  connection: local
-  gather_facts: no
-
-  vars:
-    redfish_user: admin
-    redfish_password: password
-    system_id: 1
-
-  tasks:
-
-  - name: Check Redfish API reachable
-    uri:
-      url: "https://{{ ansible_host }}/redfish/v1"
-      method: GET
-      user: "{{ redfish_user }}"
-      password: "{{ redfish_password }}"
-      force_basic_auth: yes
-      validate_certs: no
-      status_code: 200
-    register: redfish_root
-
-  - name: Get system health and power state
-    uri:
-      url: "https://{{ ansible_host }}/redfish/v1/Systems/{{ system_id }}"
-      method: GET
-      user: "{{ redfish_user }}"
-      password: "{{ redfish_password }}"
-      force_basic_auth: yes
-      validate_certs: no
-      return_content: yes
-    register: system_status
-
-  - name: Print iLO health summary
-    debug:
-      msg:
-        - "iLO IP: {{ ansible_host }}"
-        - "PowerState: {{ system_status.json.PowerState }}"
-        - "Health: {{ system_status.json.Status.Health }}"
-        - "State: {{ system_status.json.Status.State }}"
-
-
-    ---
-- name: Check iLO / Redfish health
-  hosts: ilo
-  connection: local
-  gather_facts: no
-
-  vars:
-    redfish_user: admin
-    redfish_password: password
-    system_id: 1
-
-  tasks:
-
-  - name: Check Redfish API reachable
-    uri:
-      url: "https://{{ ansible_host }}/redfish/v1"
-      method: GET
-      user: "{{ redfish_user }}"
-      password: "{{ redfish_password }}"
-      force_basic_auth: yes
-      validate_certs: no
-      status_code: 200
-    register: redfish_root
-
-  - name: Get system health and power state
-    uri:
-      url: "https://{{ ansible_host }}/redfish/v1/Systems/{{ system_id }}"
-      method: GET
-      user: "{{ redfish_user }}"
-      password: "{{ redfish_password }}"
-      force_basic_auth: yes
-      validate_certs: no
-      return_content: yes
-    register: system_status
-
-  - name: Print iLO health summary
-    debug:
-      msg:
-        - "iLO IP: {{ ansible_host }}"
-        - "PowerState: {{ system_status.json.PowerState }}"
-        - "Health: {{ system_status.json.Status.Health }}"
-        - "State: {{ system_status.json.Status.State }}"
-
-
-
-
-
-
-
-
-‐------
-#!/usr/bin/env python3
-import requests
-import urllib3
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-BMC_IP   = "192.168.10.101"
-USER     = "admin"
-PASSWORD = "password"
-
-BASE = f"https://{BMC_IP}/redfish/v1"
-
-def get_json(url):
-    r = requests.get(url, auth=(USER, PASSWORD), verify=False, timeout=15)
-    r.raise_for_status()
-    return r.json()
-
-def main():
-    root = get_json(BASE)
-    print("RedfishVersion:", root.get("RedfishVersion"))
-
-    systems_url = BASE + root["Systems"]["@odata.id"]
-    systems = get_json(systems_url)
-
-    # usually first system is the server
-    system_id_url = systems["Members"][0]["@odata.id"]
-    system = get_json(BASE + system_id_url)
-
-    print("Name      :", system.get("Name"))
-    print("Model     :", system.get("Model"))
-    print("PowerState:", system.get("PowerState"))
-    print("HostName  :", system.get("HostName"))
-
-if __name__ == "__main__":
-    main()
--------
-
-sudo tee /usr/local/bin/nmstatectl >/dev/null <<'EOF'
-#!/bin/bash
-exec podman run --rm quay.io/nmstate/nmstatectl:latest nmstatectl "$@"
-EOF
-sudo chmod +x /usr/local/bin/nmstatectl
-nmstatectl --version
-
-
-
-
-
-# Zuki [Simran's Personal assistant]
-
-grep -R "zone \"srib-lab-ocp.lan\"" -n /etc/named.conf /etc/named.rfc1912.zones /etc/named/*.conf
-grep -R "zone \"lab4.srib-lab-ocp.lan\"" -n /etc/named.conf /etc/named.rfc1912.zones /etc/named/*.conf
-
-
-
-
-Simran's personal assistant Zuki here to help you to answer all the questions of Recruiter on behalf of simran
-
-oc: /lib64/libc.so.6: version `GLIBC_2.33' not found (required by oc)
-oc: /lib64/libc.so.6: version `GLIBC_2.34' not found (required by oc)
-oc: /lib64/libc.so.6: version `GLIBC_2.32' not found (required by oc)
-[root@bastion mirror-reg]# ip route
-default via 10.10.4.7 dev ens2f1 proto static metric 100
-10.10.4.0/23 dev ens2f1 proto kernel scope link src 10.10.4.163 metric 100
-10.88.0.0/16 dev cni-podman0 proto kernel scope link src 10.88.0.1
-10.88.0.0/16 dev cni-podman0 proto kernel scope link src 10.88.0.1 metric 425
-65.1.1.111 via 70.1.1.1 dev ens2f2 proto static metric 100
-70.1.0.0/23 dev ens2f2 proto kernel scope link src 70.1.1.82 metric 101
-192.168.56.0/24 dev vboxnet0 proto kernel scope link src 192.168.56.1
-192.168.122.0/24 dev virbr0 proto kernel scope link src 192.168.122.1 linkdown
-[root@bastion mirror-reg]# cat /etc/resolv.conf
-# Generated by NetworkManager
-search srib-lab-ocp.lan
-nameserver 127.0.0.1
-nameserver 8.8.8.8
-nameserver 1.1.1.1
-nameserver ::1
-
-
-not working
-[root@bastion mirror-reg]# ip route
-default via 70.1.1.1 dev ens2f2
-10.10.4.0/23 dev ens2f1 proto kernel scope link src 10.10.4.163 metric 100
-10.88.0.0/16 dev cni-podman0 proto kernel scope link src 10.88.0.1
-10.88.0.0/16 dev cni-podman0 proto kernel scope link src 10.88.0.1 metric 425
-65.1.1.111 via 70.1.1.1 dev ens2f2 proto static metric 100
-70.1.0.0/23 dev ens2f2 proto kernel scope link src 70.1.1.82 metric 101
-192.168.56.0/24 dev vboxnet0 proto kernel scope link src 192.168.56.1
-192.168.122.0/24 dev virbr0 proto kernel scope link src 192.168.122.1 linkdown
-
-
-Jan 08 12:57:22 ocp-bootstrap.lab1.srib-lab-ocp.lan conmon[377244]: conmon e098972d52b4ebe46323 <nwarn>: Failed to open cgroups file: /sys/fs/cgroup/machine.slice/libpod-e098972d52b4ebe46323ac9ba7921a17a15219adee005cc503ab2bcb3235b725.scope/container/memory.events
-Jan 08 12:57:22 ocp-bootstrap.lab1.srib-lab-ocp.lan stoic_cori[377244]: quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:3cbba55ecd5bb44889c6c4434325c4fc3a10f8c6951b15c8b12f319ba7bc6a04
-Jan 08 12:57:22 ocp-bootstrap.lab1.srib-lab-ocp.lan podman[377235]: 2026-01-08 12:57:22.687971453 +0000 UTC m=+0.086896086 container died e098972d52b4ebe46323ac9ba7921a17a15219adee005cc503ab2bcb3235b725 (image=bastion.srib-lab-ocp.lan:8443/ocp4/openshift4@sha256:0bf2e8c1edf16de717c330b94d85f6d463c7208956b0a545cbb3fcf715e14c38, name=stoic_cori, io.openshift.release.base-image-digest=sha256:65aa22f13b104ef68e4eb2dde6300e0f0fe376b682fc7c163da01699d8165f8e, io.openshift.release=4.18.23)
-Jan 08 12:57:22 ocp-bootstrap.lab1.srib-lab-ocp.lan podman[377235]: 2026-01-08 12:57:22.615901331 +0000 UTC m=+0.014825965 image pull 34761f53050815e11feb742ee7c11ebc429c39da0cc160dd7a334843bfa6c8c4 bastion.srib-lab-ocp.lan:8443/ocp4/openshift4@sha256:0bf2e8c1edf16de717c330b94d85f6d463c7208956b0a545cbb3fcf715e14c38
-Jan 08 12:57:22 ocp-bootstrap.lab1.srib-lab-ocp.lan podman[377235]: 2026-01-08 12:57:22.739719329 +0000 UTC m=+0.138643960 container remove e098972d52b4ebe46323ac9ba7921a17a15219adee005cc503ab2bcb3235b725 (image=bastion.srib-lab-ocp.lan:8443/ocp4/openshift4@sha256:0bf2e8c1edf16de717c330b94d85f6d463c7208956b0a545cbb3fcf715e14c38, name=stoic_cori, io.openshift.release=4.18.23, io.openshift.release.base-image-digest=sha256:65aa22f13b104ef68e4eb2dde6300e0f0fe376b682fc7c163da01699d8165f8e)
-Jan 08 12:57:22 ocp-bootstrap.lab1.srib-lab-ocp.lan bootkube.sh[377262]: /usr/local/bin/bootkube.sh: line 85: oc: command not found
-Jan 08 12:57:22 ocp-bootstrap.lab1.srib-lab-ocp.lan systemd[1]: bootkube.service: Main process exited, code=exited, status=127/n/a
-Jan 08 12:57:22 ocp-bootstrap.lab1.srib-lab-ocp.lan systemd[1]: bootkube.service: Failed with result 'exit-code'.
-Jan 08 12:57:22 ocp-bootstrap.lab1.srib-lab-ocp.lan systemd[1]: bootkube.service: Consumed 1.371s CPU time.
-
-
-
-
-
-
-
-
-
-
-
-
-
-Jan 08 13:04:14 ocp-bootstrap.lab1.srib-lab-ocp.lan etcdctl[394406]: {"level":"warn","ts":"2026-01-08T13:04:14.473490Z","logger":"client","caller":"v3@v3.5.18/retry_interceptor.go:63","msg":"retrying of unary invoker failed","target":"etcd-endpoints://0xc0002705a0/localhost:2379","attempt":0,"error":"rpc error: code = DeadlineExceeded desc = latest balancer error: last connection error: connection error: desc = \"transport: Error while dialing: dial tcp [::1]:2379: connect: connection refused\""}
-Jan 08 13:04:14 ocp-bootstrap.lab1.srib-lab-ocp.lan etcdctl[394406]: https://localhost:2379 is unhealthy: failed to commit proposal: context deadline exceeded
-Jan 08 13:04:14 ocp-bootstrap.lab1.srib-lab-ocp.lan etcdctl[394406]: Error: unhealthy cluster
-Jan 08 13:04:14 ocp-bootstrap.lab1.srib-lab-ocp.lan bootkube.sh[394397]: {"level":"warn","ts":"2026-01-08T13:04:14.473490Z","logger":"client","caller":"v3@v3.5.18/retry_interceptor.go:63","msg":"retrying of unary invoker failed","target":"etcd-endpoints://0xc0002705a0/localhost:2379","attempt":0,"error":"rpc error: code = DeadlineExceeded desc = latest balancer error: last connection error: connection error: desc = \"transport: Error while dialing: dial tcp [::1]:2379: connect: connection refused\""}
-
-
---------------------
-
-mage=bastion.srib-lab-ocp.lan:8443/ocp4/openshift4@sha256:0bf2e8c1edf16de717c330b94d85f6d463c7208956b0a545cbb3fcf715e14c38, name=jovial_agnesi, io.openshift.release=4.18.23, io.openshift.release.base-image-digest=sha256:65aa22f13b104ef68e4eb2dde6300e0f0fe376b682fc7c163da01699d8165f8e)
-Jan 09 12:51:42 ocp-bootstrap.lab4.srib-lab-ocp.lan bootkube.sh[22102]: /usr/local/bin/bootkube.sh: line 85: oc: command not found
-Jan 09 12:51:42 ocp-bootstrap.lab4.srib-lab-ocp.lan systemd[1]: bootkube.service: Main process exited, code=exited, status=127/n/a
-Jan 09 12:51:42 ocp-bootstrap.lab4.srib-lab-ocp.lan systemd[1]: bootkube.service: Failed with result 'exit-code'.
-Jan 09 12:51:42 ocp-bootstrap.lab4.srib-lab-ocp.lan systemd[1]: bootkube.service: Consumed 1.205s CPU time.
-Jan 09 12:51:47 ocp-bootstrap.lab4.srib-lab-ocp.lan systemd[1]: bootkube.service: Scheduled restart job, restart counter is at 39.
-Jan 09 12:51:47 ocp-bootstrap.lab4.srib-lab-ocp.lan systemd[1]: Stopped Bootstrap a Kubernetes cluster.
-Jan 09 12:51:47 ocp-bootstrap.lab4.srib-lab-ocp.lan systemd[1]: bootkube.service: Consumed 1.205s CPU time.
-Jan 09 12:51:50 ocp-bootstrap.lab4.srib-lab-ocp.lan systemd[1]: Started Bootstrap a Kubernetes cluster.
-
-
-
-
-
-
-
-
-
------------------------
-an 09 17:59:48 ocp-bootstrap.lab4.srib-lab-ocp.lan bootkube.sh[22923]: Failed to get "cluster-scheduler-02-config.yml" schedulers.v1.config.openshift.io/cluster -n : Get "https://localhost:6443/apis/config.openshift.io/v1/schedulers/cluster": dial tcp [::1]:6443: connect: connection refused
-Jan 09 17:59:48 ocp-bootstrap.lab4.srib-lab-ocp.lan cluster-bootstrap[22932]: Failed to get "image-content-source-policy.yaml" imagecontentsourcepolicies.v1alpha1.operator.openshift.io/image-policy -n : Get "https://localhost:6443/apis/operator.openshift.io/v1alpha1/imagecontentsourcepolicies/image-policy": dial tcp [::1]:6443: connect: connection refused
-Jan 09 17:59:48 ocp-bootstrap.lab4.srib-lab-ocp.lan bootkube.sh[22923]: Failed to get "image-content-source-policy.yaml" imagecontentsourcepolicies.v1alpha1.operator.openshift.io/image-policy -n : Get "https://localhost:6443/apis/operator.openshift.io/v1alpha1/imagecontentsourcepolicies/image-policy": dial tcp [::1]:6443: connect: connection refused
-Jan 09 17:59:48 ocp-bootstrap.lab4.srib-lab-ocp.lan cluster-bootstrap[22932]: Failed to get "machine-config-99-sctp-module.yaml" machineconfigs.v1.machineconfiguration.openshift.io/99-load-sctp-module-master -n : Get "https://localhost:6443/apis/machineconfiguration.openshift.io/v1/machineconfigs/99-load-sctp-module-master": dial tcp [::1]:6443: connect: connection refused
-Jan 09 17:59:48 ocp-bootstrap.lab4.srib-lab-ocp.lan bootkube.sh[22923]: Failed to get "machine-config-99-sctp-module.yaml" machineconfigs.v1.machineconfiguration.openshift.io/99-load-sctp-module-master -n : Get "https://localhost:6443/apis/machineconfiguration.openshift.io/v1/machineconfigs/99-load-sctp-module-master": dial tcp [::1]:6443: connect: connection refused
-Jan 09 17:59:55 ocp-bootstrap.lab4.srib-lab-ocp.lan cluster-bootstrap[22932]: Skipped "machine-config-99-set-core-master-password.yaml" machineconfigs.v1.machineconfiguration.openshift.io/99-set-core-master-password -n  as it already exists
-Jan 09 17:59:55 ocp-bootstrap.lab4.srib-lab-ocp.lan cluster-bootstrap[22932]: [#18] failed to create some manifests:
-Jan 09 17:59:55 ocp-bootstrap.lab4.srib-lab-ocp.lan cluster-bootstrap[22932]: "01_01-master-cpu-partitioning_workload_pinning_machineconfig.yaml": failed to get machineconfigs.v1.machineconfiguration.openshift.io/01-master-cpu-partitioning -n : Get "https://localhost:6443/apis/machineconfiguration.openshift.io/v1/machineconfigs/01-master-cpu-partitioning": dial tcp [::1]:6443: connect: connection refused
-Jan 09 17:59:55 ocp-bootstrap.lab4.srib-lab-ocp.lan cluster-bootstrap[22932]: "01_01-worker-cpu-partitioning_workload_pinning_machineconfig.yaml": failed to get machineconfigs.v1.machineconfiguration.openshift.io/01-worker-cpu-partitioning -n : Get "https://localhost:6443/apis/machineconfiguration.openshift.io/v1/machineconfigs/01-worker-cpu-partitioning": dial tcp [::1]:6443: connect: connection refused
-Jan 09 17:59:55 ocp-bootstrap.lab4.srib-lab-ocp.lan cluster-bootstrap[22932]: "99_openshift-machineconfig_99-master-ssh.yaml": failed to get machineconfigs.v1.machineconfiguration.openshift.io/99-master-ssh -n : Get "https://localhost:6443/apis/machineconfiguration.openshift.io/v1/machineconfigs/99-master-ssh": dial tcp [::1]:6443: connect: connection refused
-Jan 09 17:59:55 ocp-bootstrap.lab4.srib-lab-ocp.lan cluster-bootstrap[22932]: "99_openshift-machineconfig_99-worker-ssh.yaml": failed to get machineconfigs.v1.machineconfiguration.openshift.io/99-worker-ssh -n : Get "https://localhost:6443/apis/machineconfiguration.openshift.io/v1/machineconfigs/99-worker-ssh": dial tcp [::1]:6443: connect: connection refused
-Jan 09 17:59:55 ocp-bootstrap.lab4.srib-lab-ocp.lan cluster-bootstrap[22932]: "cluster-dns-02-config.yml": failed to get dnses.v1.config.openshift.io/cluster -n : Get "https://localhost:6443/apis/config.openshift.io/v1/dnses/cluster": dial tcp [::1]:6443: connect: connection refused
-Jan 09 17:59:55 ocp-bootstrap.lab4.srib-lab-ocp.lan cluster-bootstrap[22932]: "cluster-ingress-02-config.yml": failed to get ingresses.v1.config.openshift.io/cluster -n : Get "https://localhost:6443/apis/config.openshift.io/v1/ingresses/cluster": dial tcp [::1]:6443: connect: connection refused
-Jan 09 17:59:55 ocp-bootstrap.lab4.srib-lab-ocp.lan cluster-bootstrap[22932]: "cluster-network-02-config.yml": failed to get networks.v1.config.openshift.io/cluster -n : Get "https://localhost:6443/apis/config.openshift.io/v1/networks/cluster": dial tcp [::1]:6443: connect: connection refused
-Jan 09 17:59:55 ocp-bootstrap.lab4.srib-lab-ocp.lan cluster-bootstrap[22932]: "cluster-network-03-config.yml": failed to get networks.v1.operator.openshift.io/cluster -n : Get "https://localhost:6443/apis/operator.openshift.io/v1/networks/cluster": dial tcp [::1]:6443: connect: connection refused
-Jan 09 17:59:55 ocp-bootstrap.lab4.srib-lab-ocp.lan cluster-bootstrap[22932]: "cluster-scheduler-02-config.yml": failed to get schedulers.v1.config.openshift.io/cluster -n : Get "https://localhost:6443/apis/config.openshift.io/v1/schedulers/cluster": dial tcp [::1]:6443: connect: connection refused
-Jan 09 17:59:55 ocp-bootstrap.lab4.srib-lab-ocp.lan cluster-bootstrap[22932]: "image-content-source-policy.yaml": failed to get imagecontentsourcepolicies.v1alpha1.operator.openshift.io/image-policy -n : Get "https://localhost:6443/apis/operator.openshift.io/v1alpha1/imagecontentsourcepolicies/image-policy": dial tcp [::1]:6443: connect: connection refused
-Jan 09 17:59:55 ocp-bootstrap.lab4.srib-lab-ocp.lan cluster-bootstrap[22932]: "machine-config-99-sctp-module.yaml": failed to get machineconfigs.v1.machineconfiguration.openshift.io/99-load-sctp-module-master -n : Get "https://localhost:6443/apis/machineconfiguration.openshift.io/v1/machineconfigs/99-load-sctp-module-master": dial tcp [::1]:6443: connect: connection refused
-Jan 09 17:59:55 ocp-bootstrap.lab4.srib-lab-ocp.lan bootkube.sh[22923]: Skipped "machine-config-99-set-core-master-password.yaml" machineconfigs.v1.machineconfiguration.openshift.io/99-set-core-master-password -n  as it already exists
-Jan 09 17:59:55 ocp-bootstrap.lab4.srib-lab-ocp.lan bootkube.sh[22923]: [#18] failed to create some manifests:
-Jan 09 17:59:55 ocp-bootstrap.lab4.srib-lab-ocp.lan bootkube.sh[22923]: "01_01-master-cpu-partitioning_workload_pinning_machineconfig.yaml": failed to get machineconfigs.v1.machineconfiguration.openshift.io/01-master-cpu-partitioning -n : Get "https://localhost:6443/apis/machineconfiguration.openshift.io/v1/machineconfigs/01-master-cpu-partitioning": dial tcp [::1]:6443: connect: connection refused
-Jan 09 17:59:55 ocp-bootstrap.lab4.srib-lab-ocp.lan bootkube.sh[22923]: "01_01-worker-cpu-partitioning_workload_pinning_machineconfig.yaml": failed to get machineconfigs.v1.machineconfiguration.openshift.io/01-worker-cpu-partitioning -n : Get "https://localhost:6443/apis/machineconfiguration.openshift.io/v1/machineconfigs/01-worker-cpu-partitioning": dial tcp [::1]:6443: connect: connection refused
-Jan 09 17:59:55 ocp-bootstrap.lab4.srib-lab-ocp.lan bootkube.sh[22923]: "99_openshift-machineconfig_99-master-ssh.yaml": failed to get machineconfigs.v1.machineconfiguration.openshift.io/99-master-ssh -n : Get "https://localhost:6443/apis/machineconfiguration.openshift.io/v1/machineconfigs/99-master-ssh": dial tcp [::1]:6443: connect: connection refused
-Jan 09 17:59:55 ocp-bootstrap.lab4.srib-lab-ocp.lan bootkube.sh[22923]: "99_openshift-machineconfig_99-worker-ssh.yaml": failed to get machineconfigs.v1.machineconfiguration.openshift.io/99-worker-ssh -n : Get "https://localhost:6443/apis/machineconfiguration.openshift.io/v1/machineconfigs/99-worker-ssh": dial tcp [::1]:6443: connect: connection refused
-Jan 09 17:59:55 ocp-bootstrap.lab4.srib-lab-ocp.lan bootkube.sh[22923]: "cluster-dns-02-config.yml": failed to get dnses.v1.config.openshift.io/cluster -n : Get "https://localhost:6443/apis/config.openshift.io/v1/dnses/cluster": dial tcp [::1]:6443: connect: connection refused
-Jan 09 17:59:55 ocp-bootstrap.lab4.srib-lab-ocp.lan bootkube.sh[22923]: "cluster-ingress-02-config.yml": failed to get ingresses.v1.config.openshift.io/cluster -n : Get "https://localhost:6443/apis/config.openshift.io/v1/ingresses/cluster": dial tcp [::1]:6443: connect: connection refused
-Jan 09 17:59:55 ocp-bootstrap.lab4.srib-lab-ocp.lan bootkube.sh[22923]: "cluster-network-02-config.yml": failed to get networks.v1.config.openshift.io/cluster -n : Get "https://localhost:6443/apis/config.openshift.io/v1/networks/cluster": dial tcp [::1]:6443: connect: connection refused
-Jan 09 17:59:55 ocp-bootstrap.lab4.srib-lab-ocp.lan bootkube.sh[22923]: "cluster-network-03-config.yml": failed to get networks.v1.operator.openshift.io/cluster -n : Get "https://localhost:6443/apis/operator.openshift.io/v1/networks/cluster": dial tcp [::1]:6443: connect: connection refused
-Jan 09 17:59:55 ocp-bootstrap.lab4.srib-lab-ocp.lan bootkube.sh[22923]: "cluster-scheduler-02-config.yml": failed to get schedulers.v1.config.openshift.io/cluster -n : Get "https://localhost:6443/apis/config.openshift.io/v1/schedulers/cluster": dial tcp [::1]:6443: connect: connection refused
-Jan 09 17:59:55 ocp-bootstrap.lab4.srib-lab-ocp.lan bootkube.sh[22923]: "image-content-source-policy.yaml": failed to get imagecontentsourcepolicies.v1alpha1.operator.openshift.io/image-policy -n : Get "https://localhost:6443/apis/operator.openshift.io/v1alpha1/imagecontentsourcepolicies/image-policy": dial tcp [::1]:6443: connect: connection refused
-Jan 09 17:59:55 ocp-bootstrap.lab4.srib-lab-ocp.lan bootkube.sh[22923]: "machine-config-99-sctp-module.yaml": failed to get machineconfigs.v1.machineconfiguration.openshift.io/99-load-sctp-module-master -n : Get "https://localhost:6443/apis/machineconfiguration.openshift.io/v1/machineconfigs/99-load-sctp-module-master": dial tcp [::1]:6443: connect: connection refused
-
-
+- name: Create working directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ work_dir }}"
+    - "{{ cluster_dir }}"
+
+- name: Download OpenShift client (oc)
+  get_url:
+    url: "{{ oc_url }}"
+    dest: "{{ work_dir }}/{{ oc_tarball }}"
+    mode: '0644'
+
+- name: Download OpenShift installer
+  get_url:
+    url: "{{ installer_url }}"
+    dest: "{{ work_dir }}/{{ installer_tarball }}"
+    mode: '0644'
+
+- name: Extract oc binary
+  unarchive:
+    src: "{{ work_dir }}/{{ oc_tarball }}"
+    dest: "{{ install_dir }}"
+    remote_src: yes
+    creates: "{{ install_dir }}/oc"
+
+- name: Extract openshift-install binary
+  unarchive:
+    src: "{{ work_dir }}/{{ installer_tarball }}"
+    dest: "{{ install_dir }}"
+    remote_src: yes
+    creates: "{{ install_dir }}/openshift-install"
+
+- name: Ensure binaries are executable
+  file:
+    path: "{{ install_dir }}/{{ item }}"
+    mode: '0755'
+  loop:
+    - oc
+    - openshift-install
+
+- name: Verify OpenShift installer version
+  command: openshift-install version
+  register: installer_version
+  changed_when: false
+
+- debug:
+    msg: "{{ installer_version.stdout }}"
+
+# install-config.yaml must already exist in cluster_dir
+- name: Create manifests
+  command: >
+    openshift-install create manifests
+    --dir {{ cluster_dir }}
+  args:
+    creates: "{{ cluster_dir }}/manifests"
+
+- name: Create agent-based ISO image
+  command: >
+    openshift-install agent create image
+    --dir {{ cluster_dir }}
+  args:
+    creates: "{{ cluster_dir }}/agent.x86_64.iso"
