@@ -1,3 +1,13 @@
+
+- name: Ensure core passwordHash exists
+  ansible.builtin.blockinfile:
+    path: /root/openshift/machine-config-99-set-core-master-password.yaml
+    insertafter: 'name:\s*core'
+    block: |
+      passwordHash: "{{ core_password_hash }}"
+  no_log: true
+
+
 - name: Generate core user password hash
   ansible.builtin.set_fact:
     core_password_hash: "{{ core_password_plain | password_hash('sha512') }}"
