@@ -1,3 +1,10 @@
+
+Warning  ProvisioningFailed    7m5s                    rook-ceph.cephfs.csi.ceph.com_csi-cephfsplugin-provisioner-6d8fbb66b7-5hdbw_b7b48ea2-c7be-439c-85eb-d34afc978db8  failed to provision volume with StorageClass "cephfs": rpc error: code = DeadlineExceeded desc = context deadline exceeded
+  Normal   ExternalProvisioning  3m28s (x26 over 9m35s)  persistentvolume-controller                                                                                       Waiting for a volume to be created either by the external provisioner 'rook-ceph.cephfs.csi.ceph.com' or manually by the system administrator. If volume creation is delayed, please verify that the provisioner is running and correctly registered.
+  Normal   Provisioning          41s (x11 over 9m35s)    rook-ceph.cephfs.csi.ceph.com_csi-cephfsplugin-provisioner-6d8fbb66b7-5hdbw_b7b48ea2-c7be-439c-85eb-d34afc978db8  External provisioner is provisioning volume for claim "vos-bscf/bscf9901-db-pvc"
+  Warning  ProvisioningFailed    41s (x10 over 7m4s)     rook-ceph.cephfs.csi.ceph.com_csi-cephfsplugin-provisioner-6d8fbb66b7-5hdbw_b7b48ea2-c7be-439c-85eb-d34afc978db8  failed to provision volume with StorageClass "cephfs": rpc error: code = Aborted desc = an operation with the given Volume ID pvc-73bb04fd-d918-4f5e-b98a-887ab6c7b616 already exists
+
+
 - name: Update core passwordHash in MachineConfig
   ansible.builtin.replace:
     path: /root/openshift/machine-config-99-set-core-master-password.yaml
